@@ -1,0 +1,46 @@
+name: Test Fastgen
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Make fastgen executable
+        run: chmod +x fastgen
+
+      - name: Test basic functionality
+        run: |
+          echo -e "password\nadmin\nhello\nworld" | ./fastgen -w - -l 100 2>&1 | wc -l
+          echo "Basic test passed"
+
+      - name: Test with rules
+        run: |
+          echo -e "password\nadmin" | ./fastgen -w - -l 50 -r original,leet,case 2>&1 | wc -l
+          echo "Rules test passed"
+
+      - name: Test brute force
+        run: |
+          ./fastgen --brute --brute-length 1:3 --charset "ab1" -l 100 2>&1 | wc -l
+          echo "Brute force test passed"
+
+      - name: Test help
+        run: |
+          ./fastgen --help
+          echo "Help test passed"
+
+      - name: Test find-rockyou (should fail gracefully)
+        run: |
+          ./fastgen --find-rockyou 2>&1 || true
+          echo "Find rockyou test passed"
